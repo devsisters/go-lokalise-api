@@ -3,6 +3,7 @@ package lokalise
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/google/go-querystring/query"
 )
@@ -59,19 +60,13 @@ type NewTranslation struct {
 func (t NewTranslation) MarshalJSON() ([]byte, error) {
 	type Alias NewTranslation
 
-	var translation interface{} = t.Translation
-
-	if json.Valid([]byte(t.Translation)) {
-		_ = json.Unmarshal([]byte(t.Translation), &translation)
-	}
-
 	return json.Marshal(&struct {
-		LanguageISO string      `json:"language_iso"`
-		Translation interface{} `json:"translation"`
+		LanguageISO string `json:"language_iso"`
+		Translation string `json:"translation"`
 		Alias
 	}{
 		LanguageISO: t.LanguageISO,
-		Translation: translation,
+		Translation: t.Translation,
 		Alias:       (Alias)(t),
 	})
 }
@@ -79,8 +74,8 @@ func (t NewTranslation) MarshalJSON() ([]byte, error) {
 func (t *NewTranslation) UnmarshalJSON(data []byte) error {
 	type Alias NewTranslation
 	aux := &struct {
-		LanguageISO string      `json:"language_iso"`
-		Translation interface{} `json:"translation"`
+		LanguageISO string `json:"language_iso"`
+		Translation string `json:"translation"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -90,24 +85,12 @@ func (t *NewTranslation) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	switch aux.Translation.(type) {
-	case map[string]interface{}:
-		marshal, err := json.Marshal(aux.Translation)
-		if err != nil {
-			return err
-		}
-		t.Translation = string(marshal)
-	case string:
-		t.Translation = fmt.Sprintf("%+v", aux.Translation)
-	default:
-		return fmt.Errorf("NewTranslation tranlation type is of unknown type")
-	}
-
 	t.LanguageISO = aux.LanguageISO
 	t.IsFuzzy = aux.IsFuzzy
 	t.IsReviewed = aux.IsReviewed
 	t.CustomTranslationStatusIds = aux.CustomTranslationStatusIds
 	t.MergeCustomTranslationStatuses = aux.MergeCustomTranslationStatuses
+	t.Translation = aux.Translation
 
 	return nil
 }
