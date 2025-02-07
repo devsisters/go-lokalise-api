@@ -1,4 +1,4 @@
-module github.com/lokalise/go-lokalise-api/v4
+module github.com/devsisters/go-lokalise-api/v4
 
 require (
 	github.com/go-resty/resty/v2 v2.1.0
